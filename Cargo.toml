@@ -7,10 +7,6 @@ license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[[bin]]
-name = "agscheduler-cli"
-path = "src/main.rs"
-
 [dependencies]
 anyhow = "1.0.82"
 chrono = "0.4.37"
