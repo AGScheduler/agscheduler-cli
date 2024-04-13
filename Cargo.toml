@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 description = "Command line interface for AGScheduler"
 license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/AGScheduler/agscheduler-cli"
+repository = "https://github.com/AGScheduler/agscheduler-cli"
+keywords = ["cli", "client", "AGScheduler"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
