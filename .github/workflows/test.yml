@@ -1,0 +1,51 @@
+name: test
+
+on:
+  push:
+    branches: ["main", "test", "dev", "dev/*", "dev_*"]
+  pull_request:
+    branches: ["main", "test", "dev"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust Tools
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy, llvm-tools
+
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+
+    - name: Build
+      run: |
+        cargo build --verbose
+
+    - name: Format with rustfmt
+      run: |
+        make format-check
+
+    - name: Lint with clippy
+      run: |
+        make lint
+
+    - name: Test with llvm-cov
+      run: |
+        make test
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        slug: AGScheduler/agscheduler-cli
+        files: lcov.info
+        fail_ci_if_error: true

@@ -5,6 +5,7 @@ install:
 	rustup component add rustfmt
 	rustup component add clippy
 	rustup component add llvm-tools
+	cargo install llvm-cov
 
 .PHONY: format
 format:
@@ -21,7 +22,7 @@ lint:
 .PHONY: test
 test:
 	cargo llvm-cov
-	cargo llvm-cov report --codecov --output-path coverage.out
+	cargo llvm-cov report --lcov --output-path lcov.info
 	cargo llvm-cov report --html
 
 .PHONY: check-all
