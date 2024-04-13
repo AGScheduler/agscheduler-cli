@@ -1,7 +1,7 @@
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Select};
 
-use agscheduler_cli::AGScheduler;
+use agscheduler_cli::api_client::AGScheduler;
 
 /// Command line interface for AGScheduler
 #[derive(Parser, Debug)]
