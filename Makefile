@@ -2,8 +2,10 @@ SHELL=/bin/bash
 
 .PHONY: install
 install:
+	rustup component add rustfmt
 	rustup component add clippy
-	cargo install cargo-llvm-cov
+	rustup component add llvm-tools
+	cargo install llvm-cov
 
 .PHONY: format
 format:
@@ -19,7 +21,8 @@ lint:
 
 .PHONY: test
 test:
-	cargo llvm-cov --all-features
+	cargo llvm-cov
+	cargo llvm-cov report --lcov --output-path lcov.info
 	cargo llvm-cov report --html
 
 .PHONY: check-all
