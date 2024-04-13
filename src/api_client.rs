@@ -129,11 +129,12 @@ impl AGScheduler {
             return;
         }
 
-        let mut options = http::Options::default();
-        options.method = Method::DELETE;
         match http::fetch(
             format!("{}{}/{id}", &self.endpoint, "/scheduler/job"),
-            options,
+            http::Options {
+                method: Method::DELETE,
+                ..Default::default()
+            },
         )
         .await
         {
@@ -151,9 +152,15 @@ impl AGScheduler {
             return;
         }
 
-        let mut options = http::Options::default();
-        options.method = Method::DELETE;
-        match http::fetch(format!("{}{}", &self.endpoint, "/scheduler/jobs"), options).await {
+        match http::fetch(
+            format!("{}{}", &self.endpoint, "/scheduler/jobs"),
+            http::Options {
+                method: Method::DELETE,
+                ..Default::default()
+            },
+        )
+        .await
+        {
             Ok(_) => {
                 println!("Ok")
             }
@@ -166,11 +173,12 @@ impl AGScheduler {
     pub async fn pause_or_resume_job(&self, action: &str) {
         let id: String = utils::input_job_id();
 
-        let mut options = http::Options::default();
-        options.method = Method::POST;
         match http::fetch(
             format!("{}{}/{}/{}", &self.endpoint, "/scheduler/job", id, action),
-            options,
+            http::Options {
+                method: Method::POST,
+                ..Default::default()
+            },
         )
         .await
         {
@@ -184,11 +192,12 @@ impl AGScheduler {
     }
 
     pub async fn start_or_stop(&self, action: &str) {
-        let mut options = http::Options::default();
-        options.method = Method::POST;
         match http::fetch(
             format!("{}{}/{}", &self.endpoint, "/scheduler", action),
-            options,
+            http::Options {
+                method: Method::POST,
+                ..Default::default()
+            },
         )
         .await
         {
