@@ -36,10 +36,6 @@ jobs:
     - name: Install cargo-llvm-cov
       uses: taiki-e/install-action@cargo-llvm-cov
 
-    - name: Build
-      run: |
-        cargo build --verbose
-
     - name: Format with rustfmt
       run: |
         make format-check
