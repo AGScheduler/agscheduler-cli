@@ -1,29 +1,29 @@
-name: test
+name: publish
 
 on:
-  push:
-    branches: ["main", "test", "dev", "dev/*", "dev_*"]
-  pull_request:
-    branches: ["main", "test", "dev"]
-  workflow_dispatch:
+  release:
+    types: [created]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
+  build-and-push-image:
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
+            archive: tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-gnu
+            archive: zip
           - os: macos-latest
             target: x86_64-apple-darwin
+            archive: zip
 
     steps:
     - uses: actions/checkout@v4
@@ -31,6 +31,7 @@ jobs:
     - name: Install Rust Tools
       uses: dtolnay/rust-toolchain@stable
       with:
+        targets: ${{ matrix.target }}
         components: rustfmt, clippy, llvm-tools
 
     - name: Install cargo-llvm-cov
@@ -52,10 +53,17 @@ jobs:
       run: |
         make test
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        slug: AGScheduler/agscheduler-cli
-        files: lcov.info
-        fail_ci_if_error: true
+    - name: Compile and release
+      uses: rust-build/rust-build.action@v1
+      with:
+        RUSTTARGET: ${{ matrix.target }}
+        ARCHIVE_TYPES: ${{ matrix.archive }}
+        UPLOAD_MODE: none
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Binary
+        path: |
+          ${{ steps.compile.outputs.BUILT_ARCHIVE }}
+          ${{ steps.compile.outputs.BUILT_CHECKSUM }}
