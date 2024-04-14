@@ -12,17 +12,21 @@ env:
 
 jobs:
   test:
-
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - build: linux
+            os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: macos-latest
+
+          - build: macos
+            os: macos-latest
             target: x86_64-apple-darwin
-          - os: windows-latest
+
+          - build: windows-gnu
+            os: windows-latest
             target: x86_64-pc-windows-gnu
 
     steps:
