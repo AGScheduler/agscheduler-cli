@@ -27,3 +27,7 @@ test:
 
 .PHONY: check-all
 check-all: format-check lint test
+
+.PHONY: build
+build:
+	cargo build --release
