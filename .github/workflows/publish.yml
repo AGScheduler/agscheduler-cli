@@ -1,0 +1,69 @@
+name: publish
+
+on:
+  release:
+    types: [created]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-push-image:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            archive: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            archive: zip
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive: zip
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust Tools
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+        components: rustfmt, clippy, llvm-tools
+
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+
+    - name: Build
+      run: |
+        cargo build --verbose
+
+    - name: Format with rustfmt
+      run: |
+        make format-check
+
+    - name: Lint with clippy
+      run: |
+        make lint
+
+    - name: Test with llvm-cov
+      run: |
+        make test
+
+    - name: Compile and release
+      uses: rust-build/rust-build.action@v1
+      with:
+        RUSTTARGET: ${{ matrix.target }}
+        ARCHIVE_TYPES: ${{ matrix.archive }}
+        UPLOAD_MODE: none
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Binary
+        path: |
+          ${{ steps.compile.outputs.BUILT_ARCHIVE }}
+          ${{ steps.compile.outputs.BUILT_CHECKSUM }}

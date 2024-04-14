@@ -1,6 +1,7 @@
 # agscheduler-cli
 
 [![test](https://github.com/agscheduler/agscheduler-cli/actions/workflows/test.yml/badge.svg)](https://github.com/agscheduler/agscheduler-cli/actions/workflows/test.yml)
+[![publish](https://github.com/agscheduler/agscheduler-cli/actions/workflows/publish.yml/badge.svg)](https://github.com/agscheduler/agscheduler-cli/actions/workflows/publish.yml)
 [![codecov](https://codecov.io/gh/AGScheduler/agscheduler-cli/graph/badge.svg?token=2KUVNBKH9K)](https://codecov.io/gh/AGScheduler/agscheduler-cli)
 [![Crates.io](https://img.shields.io/crates/v/agscheduler-cli.svg)](https://crates.io/crates/agscheduler-cli)
 ![GitHub release (with filter)](https://img.shields.io/github/v/release/agscheduler/agscheduler-cli)
