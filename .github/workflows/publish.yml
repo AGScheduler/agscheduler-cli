@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-publish:
+  build-and-upload:
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -91,6 +91,19 @@ jobs:
       with:
         files: |
           ${{ env.ASSET }}
+
+  Publish:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
 
     - name: Publish to Cargo
       uses: actions-rs/cargo@v1
