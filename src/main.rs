@@ -2,6 +2,7 @@ use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Select};
 
 use agscheduler_cli::api_client::AGScheduler;
+use agscheduler_cli::utils::Interaction;
 
 /// Command line interface for AGScheduler
 #[derive(Parser, Debug)]
@@ -45,15 +46,17 @@ async fn main() {
             .interact()
             .unwrap();
 
+        let interaction = Interaction {};
+
         match selection {
             0 => ags.get_info().await,
             1 => ags.get_funcs().await,
-            2 => ags.get_job().await,
+            2 => ags.get_job(&interaction).await,
             3 => ags.get_all_jobs().await,
-            4 => ags.delete_job().await,
-            5 => ags.delete_all_jobs().await,
-            6 => ags.pause_or_resume_job("pause").await,
-            7 => ags.pause_or_resume_job("resume").await,
+            4 => ags.delete_job(&interaction).await,
+            5 => ags.delete_all_jobs(&interaction).await,
+            6 => ags.pause_or_resume_job("pause", &interaction).await,
+            7 => ags.pause_or_resume_job("resume", &interaction).await,
             8 => ags.start_or_stop("start").await,
             9 => ags.start_or_stop("stop").await,
             10 => ags.get_cluster_nodes().await,

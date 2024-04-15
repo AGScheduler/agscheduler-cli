@@ -1,4 +1,5 @@
 use dialoguer::{theme::ColorfulTheme, Confirm, Input};
+use mockall::automock;
 use serde_json::Value;
 
 pub fn show_json(result: Value) {
@@ -8,21 +9,43 @@ pub fn show_json(result: Value) {
     println!("{formatted_json}");
 }
 
-pub fn input_job_id() -> String {
-    let id = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Job ID")
-        .interact_text()
-        .unwrap();
-
-    id
+#[automock]
+pub trait InteractionTrait {
+    fn input_job_id(&self) -> String;
+    fn confirm_delete(&self) -> bool;
 }
 
-pub fn confirm_delete() -> bool {
-    Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Do you really really want to delete?")
-        .default(false)
-        .show_default(true)
-        .wait_for_newline(true)
-        .interact()
-        .unwrap()
+pub struct Interaction;
+
+impl InteractionTrait for Interaction {
+    fn input_job_id(&self) -> String {
+        let id = Input::with_theme(&ColorfulTheme::default())
+            .with_prompt("Job ID")
+            .interact_text()
+            .unwrap();
+
+        id
+    }
+
+    fn confirm_delete(&self) -> bool {
+        Confirm::with_theme(&ColorfulTheme::default())
+            .with_prompt("Do you really really want to delete?")
+            .default(false)
+            .show_default(true)
+            .wait_for_newline(true)
+            .interact()
+            .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn it_show_json() {
+        let json_value = json!({"case": "test"});
+        show_json(json_value);
+    }
 }
