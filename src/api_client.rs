@@ -2,6 +2,7 @@ use comfy_table::Table;
 use reqwest::Method;
 use serde_json::Value;
 
+use crate::utils::InteractionTrait;
 use crate::{datetime, http, utils};
 
 pub struct AGScheduler {
@@ -53,8 +54,8 @@ impl AGScheduler {
         }
     }
 
-    pub async fn get_job(&self) {
-        let id: String = utils::input_job_id();
+    pub async fn get_job(&self, interaction: &dyn InteractionTrait) {
+        let id: String = interaction.input_job_id();
 
         match http::fetch(
             format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
@@ -122,10 +123,10 @@ impl AGScheduler {
         }
     }
 
-    pub async fn delete_job(&self) {
-        let id: String = utils::input_job_id();
+    pub async fn delete_job(&self, interaction: &dyn InteractionTrait) {
+        let id: String = interaction.input_job_id();
 
-        if !utils::confirm_delete() {
+        if !interaction.confirm_delete() {
             return;
         }
 
@@ -147,8 +148,8 @@ impl AGScheduler {
         }
     }
 
-    pub async fn delete_all_jobs(&self) {
-        if !utils::confirm_delete() {
+    pub async fn delete_all_jobs(&self, interaction: &dyn InteractionTrait) {
+        if !interaction.confirm_delete() {
             return;
         }
 
@@ -170,8 +171,8 @@ impl AGScheduler {
         }
     }
 
-    pub async fn pause_or_resume_job(&self, action: &str) {
-        let id: String = utils::input_job_id();
+    pub async fn pause_or_resume_job(&self, action: &str, interaction: &dyn InteractionTrait) {
+        let id: String = interaction.input_job_id();
 
         match http::fetch(
             format!("{}{}/{}/{}", &self.endpoint, "/scheduler/job", id, action),
@@ -269,5 +270,208 @@ impl AGScheduler {
                 println!("Error: {}", err)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::MockInteractionTrait;
+
+    use super::*;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn it_api_client() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let id = String::from("00227fbf671f4ed2");
+        let empty_data = json!({"data": null, "error": ""}).to_string();
+
+        server
+            .mock("GET", "/info")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": {
+                        "cluster_main_node": {
+                            "endpoint": "127.0.0.1:36380",
+                            "endpoint_grpc": "127.0.0.1:36360",
+                            "endpoint_http": "127.0.0.1:36370",
+                            "endpoint_main": "127.0.0.1:36380",
+                            "mode": ""
+                        },
+                        "is_cluster_mode": true,
+                        "is_running": false,
+                        "version": "0.6.1"
+                    },
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("GET", "/funcs")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": [
+                        {
+                            "info": "",
+                            "name": "github.com/agscheduler/agscheduler/examples.PrintMsg"
+                        }
+                    ],
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("GET", "/scheduler/job/00227fbf671f4ed2")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data":  {
+                        "args": {
+
+                        },
+                        "cron_expr": "",
+                        "end_at": "",
+                        "func_name": "github.com/agscheduler/agscheduler/examples.PrintMsg",
+                        "id": "00227fbf671f4ed2",
+                        "interval": "60s",
+                        "last_run_time": "0001-01-01T00:00:00Z",
+                        "name": "myJob",
+                        "next_run_time": "2024-04-15T04:19:12Z",
+                        "queues": [
+                            "default"
+                        ],
+                        "start_at": "",
+                        "status": "running",
+                        "timeout": "1h",
+                        "timezone": "UTC",
+                        "type": "interval"
+                    },
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("GET", "/scheduler/jobs")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": [
+                        {
+                            "args": {
+
+                            },
+                            "cron_expr": "",
+                            "end_at": "",
+                            "func_name": "github.com/agscheduler/agscheduler/examples.PrintMsg",
+                            "id": "00227fbf671f4ed2",
+                            "interval": "60s",
+                            "last_run_time": "0001-01-01T00:00:00Z",
+                            "name": "myJob",
+                            "next_run_time": "2024-04-15T04:19:12Z",
+                            "queues": [
+                                "default"
+                            ],
+                            "start_at": "",
+                            "status": "running",
+                            "timeout": "1h",
+                            "timezone": "UTC",
+                            "type": "interval"
+                        }
+                    ],
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("DELETE", "/scheduler/job/00227fbf671f4ed2")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("DELETE", "/scheduler/jobs")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("POST", "/scheduler/job/00227fbf671f4ed2/pause")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("POST", "/scheduler/job/00227fbf671f4ed2/resume")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("POST", "/scheduler/start")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("POST", "/scheduler/stop")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("GET", "/cluster/nodes")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": {
+                        "127.0.0.1:36380": {
+                            "endpoint": "127.0.0.1:36380",
+                            "endpoint_grpc": "127.0.0.1:36360",
+                            "endpoint_http": "127.0.0.1:36370",
+                            "endpoint_main": "127.0.0.1:36380",
+                            "health": true,
+                            "last_heartbeat_time": "2024-04-15T04:30:08.489043439Z",
+                            "mode": "",
+                            "queue": "default",
+                            "register_time": "2024-04-15T04:08:10.438222846Z",
+                            "version": "0.6.1"
+                        }
+                    },
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let mut mock = MockInteractionTrait::new();
+        mock.expect_input_job_id().return_const(id);
+        mock.expect_confirm_delete().return_const(true);
+
+        let ags = AGScheduler { endpoint: url };
+
+        ags.get_info().await;
+        ags.get_funcs().await;
+        ags.get_job(&mock).await;
+        ags.get_all_jobs().await;
+        ags.delete_job(&mock).await;
+        ags.delete_all_jobs(&mock).await;
+        ags.pause_or_resume_job("pause", &mock).await;
+        ags.pause_or_resume_job("resume", &mock).await;
+        ags.start_or_stop("start").await;
+        ags.start_or_stop("stop").await;
+        ags.get_cluster_nodes().await;
     }
 }

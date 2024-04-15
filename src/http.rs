@@ -39,3 +39,78 @@ pub async fn fetch(url: String, options: Options) -> anyhow::Result<Value> {
 
     Ok(v["data"].to_owned())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn it_fetch_ok() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let body = json!({"data": {"hello":"world"}, "error": ""}).to_string();
+
+        let _ = server
+            .mock("GET", "/hello")
+            .with_status(200)
+            .with_body(body)
+            .create_async()
+            .await;
+
+        let result = fetch(format!("{}{}", url, "/hello"), Options::default())
+            .await
+            .unwrap();
+
+        assert_eq!("{\"hello\":\"world\"}", result.to_string());
+    }
+
+    #[tokio::test]
+    async fn it_fetch_status_failed() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let body = "404 page not found";
+
+        let _ = server
+            .mock("GET", "/")
+            .with_status(404)
+            .with_body(body)
+            .create_async()
+            .await;
+
+        let result = fetch(format!("{}{}", url, "/"), Options::default())
+            .await
+            .unwrap_err();
+
+        assert_eq!(body, result.to_string());
+    }
+
+    #[tokio::test]
+    async fn it_fetch_error() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let body = json!({"data": null, "error": "`id` not found!"}).to_string();
+
+        let _ = server
+            .mock("POST", "/job")
+            .with_status(200)
+            .with_body(body)
+            .create_async()
+            .await;
+
+        let result = fetch(
+            format!("{}{}", url, "/job"),
+            Options {
+                method: Method::POST,
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!("`id` not found!", result.to_string());
+    }
+}
