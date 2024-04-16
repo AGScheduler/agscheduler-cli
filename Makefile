@@ -21,7 +21,7 @@ lint:
 
 .PHONY: test
 test:
-	cargo llvm-cov
+	cargo llvm-cov --all-features
 	cargo llvm-cov report --lcov --output-path lcov.info
 	cargo llvm-cov report --html
 

@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 use chrono::Local;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use mockall::automock;
