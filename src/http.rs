@@ -6,6 +6,7 @@ use serde_json::Value;
 
 pub struct Options {
     pub method: Method,
+    pub body: String,
     pub timeout: Duration,
 }
 
@@ -13,6 +14,7 @@ impl Default for Options {
     fn default() -> Self {
         Options {
             method: Method::GET,
+            body: String::new(),
             timeout: Duration::from_secs(6),
         }
     }
@@ -23,6 +25,7 @@ pub async fn fetch(url: String, options: Options) -> anyhow::Result<Value> {
 
     let response = client
         .request(options.method, url)
+        .body(options.body)
         .timeout(options.timeout)
         .send()
         .await?;

@@ -26,6 +26,7 @@ dependencies = [
  "clap",
  "comfy-table",
  "dialoguer",
+ "iana-time-zone",
  "mockall",
  "mockito",
  "reqwest",
