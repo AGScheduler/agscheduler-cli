@@ -14,6 +14,7 @@ struct Args {
 }
 
 #[tokio::main]
+#[cfg_attr(coverage_nightly, coverage(off))]
 async fn main() {
     let args = Args::parse();
 

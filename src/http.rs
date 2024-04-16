@@ -4,6 +4,8 @@ use std::time::Duration;
 use reqwest::Method;
 use serde_json::Value;
 
+use crate::utils;
+
 pub struct Options {
     pub method: Method,
     pub body: String,
@@ -43,6 +45,28 @@ pub async fn fetch(url: String, options: Options) -> anyhow::Result<Value> {
     Ok(v["data"].to_owned())
 }
 
+pub async fn fetch_show_json(url: String, options: Options) {
+    match fetch(url, options).await {
+        Ok(result) => {
+            utils::show_json(result);
+        }
+        Err(err) => {
+            println!("Error: {}", err)
+        }
+    }
+}
+
+pub async fn fetch_show_ok(url: String, options: Options) {
+    match fetch(url, options).await {
+        Ok(_) => {
+            println!("Ok")
+        }
+        Err(err) => {
+            println!("Error: {}", err)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -55,7 +79,7 @@ mod tests {
 
         let body = json!({"data": {"hello":"world"}, "error": ""}).to_string();
 
-        let _ = server
+        server
             .mock("GET", "/hello")
             .with_status(200)
             .with_body(body)
@@ -76,7 +100,7 @@ mod tests {
 
         let body = "404 page not found";
 
-        let _ = server
+        server
             .mock("GET", "/")
             .with_status(404)
             .with_body(body)
@@ -97,7 +121,7 @@ mod tests {
 
         let body = json!({"data": null, "error": "`id` not found!"}).to_string();
 
-        let _ = server
+        server
             .mock("POST", "/job")
             .with_status(200)
             .with_body(body)

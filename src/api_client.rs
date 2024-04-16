@@ -5,7 +5,7 @@ use reqwest::Method;
 use serde_json::{json, Value};
 
 use crate::interaction::InteractionTrait;
-use crate::{datetime, http, utils};
+use crate::{datetime, http};
 
 pub struct AGScheduler {
     pub endpoint: String,
@@ -13,19 +13,11 @@ pub struct AGScheduler {
 
 impl AGScheduler {
     pub async fn get_info(&self) {
-        match http::fetch(
+        http::fetch_show_json(
             format!("{}{}", &self.endpoint, "/info"),
             http::Options::default(),
         )
-        .await
-        {
-            Ok(result) => {
-                utils::show_json(result);
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn get_funcs(&self) {
@@ -56,7 +48,7 @@ impl AGScheduler {
         }
     }
 
-    async fn add_or_update_job(
+    async fn _edit_job(
         &self,
         data: HashMap<&str, String>,
         method: Method,
@@ -129,48 +121,42 @@ impl AGScheduler {
                 "queues": queues_value,
             }
         );
-        match http::fetch(
+        http::fetch_show_json(
             format!("{}{}", &self.endpoint, "/scheduler/job"),
             http::Options {
-                method: method,
+                method,
                 body: body.to_string(),
                 ..Default::default()
             },
         )
-        .await
-        {
-            Ok(result) => {
-                utils::show_json(result);
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn add_job(&self, interaction: &dyn InteractionTrait) {
         let mut data = HashMap::new();
-        data.insert("id", "".to_string());
-        data.insert("name", "".to_string());
-        data.insert("type", "".to_string());
-        data.insert("start_at", "".to_string());
-        data.insert("interval", "".to_string());
-        data.insert("cron_expr", "".to_string());
-        data.insert("timezone", "".to_string());
-        data.insert("func_name", "".to_string());
-        data.insert("args", "".to_string());
-        data.insert("timeout", "".to_string());
-        data.insert("queues", "".to_string());
+        for key in [
+            "id",
+            "name",
+            "type",
+            "start_at",
+            "interval",
+            "cron_expr",
+            "timezone",
+            "func_name",
+            "args",
+            "timeout",
+            "queues",
+        ] {
+            data.insert(key, "".to_string());
+        }
 
-        self.add_or_update_job(data, Method::POST, interaction)
-            .await;
+        self._edit_job(data, Method::POST, interaction).await;
     }
 
     pub async fn update_job(&self, interaction: &dyn InteractionTrait) {
-        let mut data = HashMap::new();
-
         let id = interaction.input_id();
 
+        let mut data = HashMap::new();
         match http::fetch(
             format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
             http::Options::default(),
@@ -179,47 +165,38 @@ impl AGScheduler {
         {
             Ok(result) => {
                 data.insert("id", id);
-                data.insert("name", result["name"].as_str().unwrap().to_string());
-                data.insert("type", result["type"].as_str().unwrap().to_string());
-                data.insert("start_at", result["start_at"].as_str().unwrap().to_string());
-                data.insert("interval", result["interval"].as_str().unwrap().to_string());
-                data.insert(
-                    "cron_expr",
-                    result["cron_expr"].as_str().unwrap().to_string(),
-                );
-                data.insert("timezone", result["timezone"].as_str().unwrap().to_string());
-                data.insert(
-                    "func_name",
-                    result["func_name"].as_str().unwrap().to_string(),
-                );
                 data.insert("args", result["args"].to_string());
-                data.insert("timeout", result["timeout"].as_str().unwrap().to_string());
                 data.insert("queues", result["queues"].to_string());
+
+                for key in [
+                    "name",
+                    "type",
+                    "start_at",
+                    "interval",
+                    "cron_expr",
+                    "timezone",
+                    "func_name",
+                    "timeout",
+                ] {
+                    data.insert(key, result[key].as_str().unwrap().to_string());
+                }
             }
             Err(err) => {
                 println!("Error: {}", err)
             }
         }
 
-        self.add_or_update_job(data, Method::PUT, interaction).await;
+        self._edit_job(data, Method::PUT, interaction).await;
     }
 
     pub async fn get_job(&self, interaction: &dyn InteractionTrait) {
         let id = interaction.input_id();
 
-        match http::fetch(
+        http::fetch_show_json(
             format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
             http::Options::default(),
         )
-        .await
-        {
-            Ok(result) => {
-                utils::show_json(result);
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn get_all_jobs(&self) {
@@ -278,22 +255,14 @@ impl AGScheduler {
             return;
         }
 
-        match http::fetch(
+        http::fetch_show_ok(
             format!("{}{}/{id}", &self.endpoint, "/scheduler/job"),
             http::Options {
                 method: Method::DELETE,
                 ..Default::default()
             },
         )
-        .await
-        {
-            Ok(_) => {
-                println!("Ok")
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn delete_all_jobs(&self, interaction: &dyn InteractionTrait) {
@@ -301,62 +270,38 @@ impl AGScheduler {
             return;
         }
 
-        match http::fetch(
+        http::fetch_show_ok(
             format!("{}{}", &self.endpoint, "/scheduler/jobs"),
             http::Options {
                 method: Method::DELETE,
                 ..Default::default()
             },
         )
-        .await
-        {
-            Ok(_) => {
-                println!("Ok")
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn pause_or_resume_job(&self, action: &str, interaction: &dyn InteractionTrait) {
         let id = interaction.input_id();
 
-        match http::fetch(
+        http::fetch_show_ok(
             format!("{}{}/{}/{}", &self.endpoint, "/scheduler/job", id, action),
             http::Options {
                 method: Method::POST,
                 ..Default::default()
             },
         )
-        .await
-        {
-            Ok(_) => {
-                println!("Ok")
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn start_or_stop(&self, action: &str) {
-        match http::fetch(
+        http::fetch_show_ok(
             format!("{}{}/{}", &self.endpoint, "/scheduler", action),
             http::Options {
                 method: Method::POST,
                 ..Default::default()
             },
         )
-        .await
-        {
-            Ok(_) => {
-                println!("Ok")
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
+        .await;
     }
 
     pub async fn get_cluster_nodes(&self) {
@@ -540,6 +485,18 @@ mod tests {
             .create_async()
             .await;
         server
+            .mock("POST", "/scheduler/job")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("PUT", "/scheduler/job")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
             .mock("DELETE", "/scheduler/job/00227fbf671f4ed2")
             .with_status(200)
             .with_body(&empty_data)
@@ -604,6 +561,18 @@ mod tests {
         let mut mock = MockInteractionTrait::new();
         mock.expect_input_id().return_const(id);
         mock.expect_confirm_delete().return_const(true);
+        mock.expect_input_name().return_const("myJob");
+        mock.expect_input_start_at()
+            .return_const("2024-04-16 15:23:51");
+        mock.expect_input_interval().return_const("60s");
+        mock.expect_input_cron_expr().return_const("*/1 * * * *");
+        mock.expect_input_timezone().return_const("UTC");
+        mock.expect_input_args().return_const("{}");
+        mock.expect_input_timeout().return_const("1h");
+        mock.expect_input_queues().return_const("[\"default\"]");
+        mock.expect_select_type().return_const("Interval");
+        mock.expect_select_func_name()
+            .return_const("github.com/agscheduler/agscheduler/examples.PrintMsg");
 
         let ags = AGScheduler { endpoint: url };
 
@@ -611,6 +580,8 @@ mod tests {
         ags.get_funcs().await;
         ags.get_job(&mock).await;
         ags.get_all_jobs().await;
+        ags.add_job(&mock).await;
+        ags.update_job(&mock).await;
         ags.delete_job(&mock).await;
         ags.delete_all_jobs(&mock).await;
         ags.pause_or_resume_job("pause", &mock).await;
