@@ -1,4 +1,4 @@
-# agscheduler-cli
+# AGScheduler-Cli
 
 [![test](https://github.com/agscheduler/agscheduler-cli/actions/workflows/test.yml/badge.svg)](https://github.com/agscheduler/agscheduler-cli/actions/workflows/test.yml)
 [![publish](https://github.com/agscheduler/agscheduler-cli/actions/workflows/publish.yml/badge.svg)](https://github.com/agscheduler/agscheduler-cli/actions/workflows/publish.yml)
