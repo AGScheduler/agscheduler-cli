@@ -212,6 +212,7 @@ impl AGScheduler {
                     "ID",
                     "Name",
                     "Type",
+                    "TypeValue",
                     "LastRunTime",
                     "NextRunTime",
                     "Status",
@@ -219,6 +220,20 @@ impl AGScheduler {
 
                 if let Value::Array(list) = result {
                     for j in list {
+                        let _type = j["type"].as_str().unwrap();
+                        let mut type_value = "";
+                        match _type {
+                            "datetime" => {
+                                type_value = j["start_at"].as_str().unwrap();
+                            }
+                            "interval" => {
+                                type_value = j["interval"].as_str().unwrap();
+                            }
+                            "cron" => {
+                                type_value = j["cron_expr"].as_str().unwrap();
+                            }
+                            _ => {}
+                        }
                         let last_run_time =
                             datetime::parse_iso8601_to_local(j["last_run_time"].as_str().unwrap())
                                 .unwrap()
@@ -232,7 +247,8 @@ impl AGScheduler {
                         table.add_row(vec![
                             j["id"].as_str().unwrap(),
                             j["name"].as_str().unwrap(),
-                            j["type"].as_str().unwrap(),
+                            _type,
+                            type_value,
                             &last_run_time[..],
                             &next_run_time[..],
                             j["status"].as_str().unwrap(),
