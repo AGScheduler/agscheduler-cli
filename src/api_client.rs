@@ -212,6 +212,7 @@ impl AGScheduler {
                     "ID",
                     "Name",
                     "Type",
+                    "TypeValue",
                     "LastRunTime",
                     "NextRunTime",
                     "Status",
@@ -219,6 +220,20 @@ impl AGScheduler {
 
                 if let Value::Array(list) = result {
                     for j in list {
+                        let _type = j["type"].as_str().unwrap();
+                        let mut type_value = "";
+                        match _type {
+                            "datetime" => {
+                                type_value = j["start_at"].as_str().unwrap();
+                            }
+                            "interval" => {
+                                type_value = j["interval"].as_str().unwrap();
+                            }
+                            "cron" => {
+                                type_value = j["cron_expr"].as_str().unwrap();
+                            }
+                            _ => {}
+                        }
                         let last_run_time =
                             datetime::parse_iso8601_to_local(j["last_run_time"].as_str().unwrap())
                                 .unwrap()
@@ -232,7 +247,8 @@ impl AGScheduler {
                         table.add_row(vec![
                             j["id"].as_str().unwrap(),
                             j["name"].as_str().unwrap(),
-                            j["type"].as_str().unwrap(),
+                            _type,
+                            type_value,
                             &last_run_time[..],
                             &next_run_time[..],
                             j["status"].as_str().unwrap(),
@@ -315,6 +331,7 @@ impl AGScheduler {
                 let mut table = Table::new();
                 table.set_header(vec![
                     "Endpoint",
+                    "Leader",
                     "EndpointGRPC",
                     "EndpointHTTP",
                     "EndpointMain",
@@ -328,6 +345,10 @@ impl AGScheduler {
 
                 if let Value::Object(map) = result {
                     for (_, n) in map.iter() {
+                        let mut is_leader = false;
+                        if n["endpoint"] == n["endpoint_main"] {
+                            is_leader = true;
+                        }
                         let register_time =
                             datetime::parse_iso8601_to_local(n["register_time"].as_str().unwrap())
                                 .unwrap()
@@ -341,6 +362,7 @@ impl AGScheduler {
                         .to_string();
                         table.add_row(vec![
                             n["endpoint"].as_str().unwrap(),
+                            &is_leader.to_string(),
                             n["endpoint_grpc"].as_str().unwrap(),
                             n["endpoint_http"].as_str().unwrap(),
                             n["endpoint_main"].as_str().unwrap(),
@@ -476,6 +498,48 @@ mod tests {
                             "timeout": "1h",
                             "timezone": "UTC",
                             "type": "interval"
+                        },
+                        {
+                            "args": {
+
+                            },
+                            "cron_expr": "",
+                            "end_at": "",
+                            "func_name": "github.com/agscheduler/agscheduler/examples.PrintMsg",
+                            "id": "5hy65y56yh65y56h",
+                            "interval": "",
+                            "last_run_time": "0001-01-01T00:00:00Z",
+                            "name": "myJob2",
+                            "next_run_time": "2024-04-15T04:19:12Z",
+                            "queues": [
+                                "default"
+                            ],
+                            "start_at": "2024-05-16 17:16:08",
+                            "status": "running",
+                            "timeout": "1h",
+                            "timezone": "UTC",
+                            "type": "datetime"
+                        },
+                        {
+                            "args": {
+
+                            },
+                            "cron_expr": "*/1 * * * *",
+                            "end_at": "",
+                            "func_name": "github.com/agscheduler/agscheduler/examples.PrintMsg",
+                            "id": "n4yhb56j3gj45h56",
+                            "interval": "",
+                            "last_run_time": "0001-01-01T00:00:00Z",
+                            "name": "myJob3",
+                            "next_run_time": "2024-04-15T04:19:12Z",
+                            "queues": [
+                                "default"
+                            ],
+                            "start_at": "",
+                            "status": "running",
+                            "timeout": "1h",
+                            "timezone": "UTC",
+                            "type": "cron"
                         }
                     ],
                     "error": ""
