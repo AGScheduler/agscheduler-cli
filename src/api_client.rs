@@ -498,6 +498,48 @@ mod tests {
                             "timeout": "1h",
                             "timezone": "UTC",
                             "type": "interval"
+                        },
+                        {
+                            "args": {
+
+                            },
+                            "cron_expr": "",
+                            "end_at": "",
+                            "func_name": "github.com/agscheduler/agscheduler/examples.PrintMsg",
+                            "id": "5hy65y56yh65y56h",
+                            "interval": "",
+                            "last_run_time": "0001-01-01T00:00:00Z",
+                            "name": "myJob2",
+                            "next_run_time": "2024-04-15T04:19:12Z",
+                            "queues": [
+                                "default"
+                            ],
+                            "start_at": "2024-05-16 17:16:08",
+                            "status": "running",
+                            "timeout": "1h",
+                            "timezone": "UTC",
+                            "type": "datetime"
+                        },
+                        {
+                            "args": {
+
+                            },
+                            "cron_expr": "*/1 * * * *",
+                            "end_at": "",
+                            "func_name": "github.com/agscheduler/agscheduler/examples.PrintMsg",
+                            "id": "n4yhb56j3gj45h56",
+                            "interval": "",
+                            "last_run_time": "0001-01-01T00:00:00Z",
+                            "name": "myJob3",
+                            "next_run_time": "2024-04-15T04:19:12Z",
+                            "queues": [
+                                "default"
+                            ],
+                            "start_at": "",
+                            "status": "running",
+                            "timeout": "1h",
+                            "timezone": "UTC",
+                            "type": "cron"
                         }
                     ],
                     "error": ""
