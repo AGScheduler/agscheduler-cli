@@ -331,6 +331,7 @@ impl AGScheduler {
                 let mut table = Table::new();
                 table.set_header(vec![
                     "Endpoint",
+                    "Leader",
                     "EndpointGRPC",
                     "EndpointHTTP",
                     "EndpointMain",
@@ -344,6 +345,10 @@ impl AGScheduler {
 
                 if let Value::Object(map) = result {
                     for (_, n) in map.iter() {
+                        let mut is_leader = false;
+                        if n["endpoint"] == n["endpoint_main"] {
+                            is_leader = true;
+                        }
                         let register_time =
                             datetime::parse_iso8601_to_local(n["register_time"].as_str().unwrap())
                                 .unwrap()
@@ -357,6 +362,7 @@ impl AGScheduler {
                         .to_string();
                         table.add_row(vec![
                             n["endpoint"].as_str().unwrap(),
+                            &is_leader.to_string(),
                             n["endpoint_grpc"].as_str().unwrap(),
                             n["endpoint_http"].as_str().unwrap(),
                             n["endpoint_main"].as_str().unwrap(),
