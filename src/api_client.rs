@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use comfy_table::Table;
+use comfy_table::{ContentArrangement, Table};
 use reqwest::Method;
 use serde_json::{json, Value};
 
@@ -29,7 +29,9 @@ impl AGScheduler {
         {
             Ok(result) => {
                 let mut table = Table::new();
-                table.set_header(vec!["name", "info"]);
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec!["name", "info"]);
 
                 if let Value::Array(list) = result {
                     for f in list {
@@ -208,15 +210,17 @@ impl AGScheduler {
         {
             Ok(result) => {
                 let mut table = Table::new();
-                table.set_header(vec![
-                    "ID",
-                    "Name",
-                    "Type",
-                    "TypeValue",
-                    "LastRunTime",
-                    "NextRunTime",
-                    "Status",
-                ]);
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec![
+                        "ID",
+                        "Name",
+                        "Type",
+                        "TypeValue",
+                        "LastRunTime",
+                        "NextRunTime",
+                        "Status",
+                    ]);
 
                 if let Value::Array(list) = result {
                     for j in list {
@@ -320,6 +324,113 @@ impl AGScheduler {
         .await;
     }
 
+    async fn _get_records(&self, job_id: &str, interaction: &dyn InteractionTrait) {
+        let page = interaction.input_page("");
+        let page_size = interaction.input_page_size("");
+
+        let mut url_path = String::from("/recorder/records");
+        if !job_id.is_empty() {
+            url_path = format!("{}/{}", url_path, job_id);
+        }
+        let query: String = format!("page={}&page_size={}", page, page_size);
+        url_path = format!("{}?{}", url_path, query);
+        match http::fetch(
+            format!("{}{}", &self.endpoint, url_path),
+            http::Options::default(),
+        )
+        .await
+        {
+            Ok(result) => {
+                let mut table = Table::new();
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec![
+                        "ID", "JobName", "JobId", "Status", "StartAt", "EndAt", "Result",
+                    ]);
+
+                if let Value::Object(map) = result {
+                    if let Value::Array(list) = &map["res"] {
+                        for r in list {
+                            let start_at =
+                                datetime::parse_iso8601_to_local(r["start_at"].as_str().unwrap())
+                                    .unwrap()
+                                    .format("%Y-%m-%d %H:%M:%S")
+                                    .to_string();
+                            let end_at =
+                                datetime::parse_iso8601_to_local(r["end_at"].as_str().unwrap())
+                                    .unwrap()
+                                    .format("%Y-%m-%d %H:%M:%S")
+                                    .to_string();
+                            table.add_row(vec![
+                                &r["id"].to_string(),
+                                r["job_name"].as_str().unwrap(),
+                                r["job_id"].as_str().unwrap(),
+                                r["status"].as_str().unwrap(),
+                                &start_at[..],
+                                &end_at[..],
+                                r["result"].as_str().unwrap(),
+                            ]);
+                        }
+
+                        println!("{table}");
+                    }
+
+                    let page = map["page"].to_string().parse::<f32>().unwrap();
+                    let page_size = map["page_size"].to_string().parse::<f32>().unwrap();
+                    let total = map["total"].to_string().parse::<f32>().unwrap();
+                    let page_count = total / page_size;
+                    println!(
+                        "Page {}/{}  PageSize {}  Total {}",
+                        page,
+                        page_count.ceil(),
+                        page_size,
+                        total
+                    );
+                }
+            }
+            Err(err) => {
+                println!("Error: {}", err)
+            }
+        }
+    }
+
+    pub async fn get_records(&self, interaction: &dyn InteractionTrait) {
+        let job_id = interaction.input_job_id();
+        self._get_records(&job_id, interaction).await;
+    }
+
+    pub async fn get_all_records(&self, interaction: &dyn InteractionTrait) {
+        self._get_records("", interaction).await;
+    }
+
+    async fn _delete_records(&self, job_id: &str, interaction: &dyn InteractionTrait) {
+        if !interaction.confirm_delete() {
+            return;
+        }
+
+        let mut url_path = String::from("/recorder/records");
+        if !job_id.is_empty() {
+            url_path = format!("{}/{}", url_path, job_id);
+        }
+        http::fetch_show_ok(
+            format!("{}{}", &self.endpoint, url_path),
+            http::Options {
+                method: Method::DELETE,
+                ..Default::default()
+            },
+        )
+        .await;
+    }
+
+    pub async fn delete_records(&self, interaction: &dyn InteractionTrait) {
+        let job_id = interaction.input_job_id();
+        self._delete_records(&job_id, interaction).await;
+    }
+
+    pub async fn delete_all_records(&self, interaction: &dyn InteractionTrait) {
+        self._delete_records("", interaction).await;
+    }
+
     pub async fn get_cluster_nodes(&self) {
         match http::fetch(
             format!("{}{}", &self.endpoint, "/cluster/nodes"),
@@ -329,19 +440,21 @@ impl AGScheduler {
         {
             Ok(result) => {
                 let mut table = Table::new();
-                table.set_header(vec![
-                    "Endpoint",
-                    "Leader",
-                    "EndpointGRPC",
-                    "EndpointHTTP",
-                    "EndpointMain",
-                    "Queue",
-                    "Mode",
-                    "Version",
-                    "Health",
-                    "RegisterTime",
-                    "LastHeartbeatTime",
-                ]);
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec![
+                        "Endpoint",
+                        "Leader",
+                        "EndpointGRPC",
+                        "EndpointHTTP",
+                        "EndpointMain",
+                        "Queue",
+                        "Mode",
+                        "Version",
+                        "Health",
+                        "RegisterTime",
+                        "LastHeartbeatTime",
+                    ]);
 
                 if let Value::Object(map) = result {
                     for (_, n) in map.iter() {
@@ -398,7 +511,11 @@ mod tests {
         let url = server.url();
 
         let id = String::from("00227fbf671f4ed2");
+        let job_id = String::from("b1638cfb7a8d4247");
         let empty_data = json!({"data": null, "error": ""}).to_string();
+
+        let page = String::from("1");
+        let page_size = String::from("10");
 
         server
             .mock("GET", "/info")
@@ -441,7 +558,7 @@ mod tests {
             .create_async()
             .await;
         server
-            .mock("GET", "/scheduler/job/00227fbf671f4ed2")
+            .mock("GET", format!("/scheduler/job/{}", id).as_str())
             .with_status(200)
             .with_body(
                 json!({
@@ -561,7 +678,7 @@ mod tests {
             .create_async()
             .await;
         server
-            .mock("DELETE", "/scheduler/job/00227fbf671f4ed2")
+            .mock("DELETE", format!("/scheduler/job/{}", id).as_str())
             .with_status(200)
             .with_body(&empty_data)
             .create_async()
@@ -573,13 +690,13 @@ mod tests {
             .create_async()
             .await;
         server
-            .mock("POST", "/scheduler/job/00227fbf671f4ed2/pause")
+            .mock("POST", format!("/scheduler/job/{}/pause", id).as_str())
             .with_status(200)
             .with_body(&empty_data)
             .create_async()
             .await;
         server
-            .mock("POST", "/scheduler/job/00227fbf671f4ed2/resume")
+            .mock("POST", format!("/scheduler/job/{}/resume", id).as_str())
             .with_status(200)
             .with_body(&empty_data)
             .create_async()
@@ -592,6 +709,91 @@ mod tests {
             .await;
         server
             .mock("POST", "/scheduler/stop")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock(
+                "GET",
+                format!(
+                    "/recorder/records/{}?page={}&page_size={}",
+                    job_id, page, page_size
+                )
+                .as_str(),
+            )
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": {
+                        "page": 1,
+                        "page_size": 10,
+                        "res": [
+                            {
+                                "id": 516544388,
+                                "job_id": "b1638cfb7a8d4247",
+                                "job_name": "myJob5",
+                                "status": "completed",
+                                "result": "",
+                                "start_at": "2024-06-03T11:27:28.002Z",
+                                "end_at": "2024-06-03T11:27:28.027Z"
+                            }
+                        ],
+                        "total": 1
+                    },
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock(
+                "GET",
+                format!("/recorder/records?page={}&page_size={}", page, page_size).as_str(),
+            )
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": {
+                        "page": 1,
+                        "page_size": 10,
+                        "res": [
+                            {
+                                "id": 516544388,
+                                "job_id": "b1638cfb7a8d4247",
+                                "job_name": "myJob5",
+                                "status": "completed",
+                                "result": "",
+                                "start_at": "2024-06-03T11:27:28.002Z",
+                                "end_at": "2024-06-03T11:27:28.027Z"
+                            },
+                            {
+                                "id": 516541097,
+                                "job_id": "e99532afe9f44e63",
+                                "job_name": "myJob4",
+                                "status": "error",
+                                "result": "error: something error",
+                                "start_at": "2024-06-03T10:54:46.034Z",
+                                "end_at": "2024-06-03T10:54:51.069Z"
+                            }
+                        ],
+                        "total": 2
+                    },
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("DELETE", format!("/recorder/records/{}", job_id).as_str())
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("DELETE", "/recorder/records")
             .with_status(200)
             .with_body(&empty_data)
             .create_async()
@@ -624,6 +826,7 @@ mod tests {
 
         let mut mock = MockInteractionTrait::new();
         mock.expect_input_id().return_const(id);
+        mock.expect_input_job_id().return_const(job_id);
         mock.expect_confirm_delete().return_const(true);
         mock.expect_input_name().return_const("myJob");
         mock.expect_input_start_at()
@@ -634,6 +837,8 @@ mod tests {
         mock.expect_input_args().return_const("{}");
         mock.expect_input_timeout().return_const("1h");
         mock.expect_input_queues().return_const("[\"default\"]");
+        mock.expect_input_page().return_const(page);
+        mock.expect_input_page_size().return_const(page_size);
         mock.expect_select_type().return_const("Interval");
         mock.expect_select_func_name()
             .return_const("github.com/agscheduler/agscheduler/examples.PrintMsg");
@@ -652,6 +857,10 @@ mod tests {
         ags.pause_or_resume_job("resume", &mock).await;
         ags.start_or_stop("start").await;
         ags.start_or_stop("stop").await;
+        ags.get_records(&mock).await;
+        ags.get_all_records(&mock).await;
+        ags.delete_records(&mock).await;
+        ags.delete_all_records(&mock).await;
         ags.get_cluster_nodes().await;
     }
 }

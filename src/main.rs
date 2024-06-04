@@ -28,8 +28,6 @@ async fn main() {
 
     loop {
         let selections = &[
-            "Get Info",
-            "Get Funcs",
             "Get Job",
             "Get All Jobs",
             "Add Job",
@@ -38,6 +36,12 @@ async fn main() {
             "Delete All Jobs",
             "Pause Job",
             "Resume Job",
+            "Get Records",
+            "Get All Records",
+            "Delete Records",
+            "Delete All Records",
+            "Get Info",
+            "Get Funcs",
             "Start",
             "Stop",
             "Get Cluster Nodes",
@@ -48,25 +52,29 @@ async fn main() {
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Select your operation")
             .default(0)
-            .max_length(4)
+            .max_length(8)
             .items(&selections[..])
             .interact()
             .unwrap();
 
         match selection {
-            0 => ags.get_info().await,
-            1 => ags.get_funcs().await,
-            2 => ags.get_job(&interaction).await,
-            3 => ags.get_all_jobs().await,
-            4 => ags.add_job(&interaction).await,
-            5 => ags.update_job(&interaction).await,
-            6 => ags.delete_job(&interaction).await,
-            7 => ags.delete_all_jobs(&interaction).await,
-            8 => ags.pause_or_resume_job("pause", &interaction).await,
-            9 => ags.pause_or_resume_job("resume", &interaction).await,
-            10 => ags.start_or_stop("start").await,
-            11 => ags.start_or_stop("stop").await,
-            12 => ags.get_cluster_nodes().await,
+            0 => ags.get_job(&interaction).await,
+            1 => ags.get_all_jobs().await,
+            2 => ags.add_job(&interaction).await,
+            3 => ags.update_job(&interaction).await,
+            4 => ags.delete_job(&interaction).await,
+            5 => ags.delete_all_jobs(&interaction).await,
+            6 => ags.pause_or_resume_job("pause", &interaction).await,
+            7 => ags.pause_or_resume_job("resume", &interaction).await,
+            8 => ags.get_records(&interaction).await,
+            9 => ags.get_all_records(&interaction).await,
+            10 => ags.delete_records(&interaction).await,
+            11 => ags.delete_all_records(&interaction).await,
+            12 => ags.get_info().await,
+            13 => ags.get_funcs().await,
+            14 => ags.start_or_stop("start").await,
+            15 => ags.start_or_stop("stop").await,
+            16 => ags.get_cluster_nodes().await,
             _ => panic!("Error"),
         };
     }
