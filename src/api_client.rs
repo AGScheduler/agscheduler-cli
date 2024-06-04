@@ -356,11 +356,14 @@ impl AGScheduler {
                                     .unwrap()
                                     .format("%Y-%m-%d %H:%M:%S")
                                     .to_string();
-                            let end_at =
-                                datetime::parse_iso8601_to_local(r["end_at"].as_str().unwrap())
-                                    .unwrap()
-                                    .format("%Y-%m-%d %H:%M:%S")
-                                    .to_string();
+                            let mut end_at = String::from("");
+                            if r["status"] != "running" {
+                                end_at =
+                                    datetime::parse_iso8601_to_local(r["end_at"].as_str().unwrap())
+                                        .unwrap()
+                                        .format("%Y-%m-%d %H:%M:%S")
+                                        .to_string();
+                            }
                             table.add_row(vec![
                                 &r["id"].to_string(),
                                 r["job_name"].as_str().unwrap(),
