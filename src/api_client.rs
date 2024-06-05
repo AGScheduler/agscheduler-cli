@@ -579,9 +579,7 @@ mod tests {
                         "last_run_time": "0001-01-01T00:00:00Z",
                         "name": "myJob",
                         "next_run_time": "2024-04-15T04:19:12Z",
-                        "queues": [
-                            "default"
-                        ],
+                        "queues": [],
                         "start_at": "",
                         "status": "running",
                         "timeout": "1h",
@@ -612,9 +610,7 @@ mod tests {
                             "last_run_time": "0001-01-01T00:00:00Z",
                             "name": "myJob",
                             "next_run_time": "2024-04-15T04:19:12Z",
-                            "queues": [
-                                "default"
-                            ],
+                            "queues": [],
                             "start_at": "",
                             "status": "running",
                             "timeout": "1h",
@@ -633,9 +629,7 @@ mod tests {
                             "last_run_time": "0001-01-01T00:00:00Z",
                             "name": "myJob2",
                             "next_run_time": "2024-04-15T04:19:12Z",
-                            "queues": [
-                                "default"
-                            ],
+                            "queues": [],
                             "start_at": "2024-05-16 17:16:08",
                             "status": "running",
                             "timeout": "1h",
@@ -654,9 +648,7 @@ mod tests {
                             "last_run_time": "0001-01-01T00:00:00Z",
                             "name": "myJob3",
                             "next_run_time": "2024-04-15T04:19:12Z",
-                            "queues": [
-                                "default"
-                            ],
+                            "queues": [],
                             "start_at": "",
                             "status": "running",
                             "timeout": "1h",
@@ -841,7 +833,7 @@ mod tests {
         mock.expect_input_timezone().return_const("UTC");
         mock.expect_input_args().return_const("{}");
         mock.expect_input_timeout().return_const("1h");
-        mock.expect_input_queues().return_const("[\"default\"]");
+        mock.expect_input_queues().return_const("[]");
         mock.expect_input_page().return_const(page);
         mock.expect_input_page_size().return_const(page_size);
         mock.expect_select_type().return_const("Interval");
