@@ -51,7 +51,6 @@ jobs:
     - name: Install Rust Tools
       uses: dtolnay/rust-toolchain@stable
       with:
-        targets: ${{ matrix.target }}
         components: rustfmt, clippy, llvm-tools
 
     - name: Install cargo-llvm-cov
@@ -77,7 +76,7 @@ jobs:
 
     - name: Build
       run: |
-        cargo build --release --verbose --target ${{ matrix.target }}
+        make build
 
     - name: Build archive
       shell: bash
