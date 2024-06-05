@@ -97,7 +97,8 @@ impl AGScheduler {
                 }
             }
             Err(err) => {
-                println!("Error: {}", err)
+                println!("Error: {}", err);
+                return;
             }
         }
         let func_name = interaction.select_func_name(fn_selections);
@@ -184,7 +185,8 @@ impl AGScheduler {
                 }
             }
             Err(err) => {
-                println!("Error: {}", err)
+                println!("Error: {}", err);
+                return;
             }
         }
 
