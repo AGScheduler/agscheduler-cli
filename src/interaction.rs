@@ -128,7 +128,7 @@ impl InteractionTrait for Interaction {
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     fn input_queues(&self, text: &str) -> String {
-        self.input_common_default("Queues", "[\"default\"]", text)
+        self.input_common_default("Queues", "[]", text)
             .trim()
             .to_string()
     }
