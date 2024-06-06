@@ -32,10 +32,14 @@ Options:
 $ agscheduler-cli   
 Connecting to `http://127.0.0.1:36370`...
 ? Select your operation › [Page 1/3] 
-  Get Info
-  Get Funcs
+  Add Job
   Get Job
 ❯ Get All Jobs
+  Update Job
+  Delete Job
+  Delete All Jobs
+  Pause Job
+  Resume Job
 
 ✔ Select your operation · Get All Jobs
 +------------------+-------+----------+-----------+---------------------+---------------------+---------+
