@@ -315,6 +315,51 @@ impl AGScheduler {
         .await;
     }
 
+    pub async fn run_or_schedule_job(&self, action: &str, interaction: &dyn InteractionTrait) {
+        let id = interaction.input_id();
+
+        match http::fetch(
+            format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
+            http::Options::default(),
+        )
+        .await
+        {
+            Ok(result) => {
+                let args = result["args"].to_string();
+                let args_value: Value = serde_json::from_str(&args).unwrap();
+                let queues = result["queues"].to_string();
+                let queues_value: Value = serde_json::from_str(&queues).unwrap();
+                let body = json!(
+                    {
+                        "id": id,
+                        "name": result["name"].as_str().unwrap().to_string(),
+                        "type": result["type"].as_str().unwrap().to_string(),
+                        "start_at": result["start_at"].as_str().unwrap().to_string(),
+                        "interval": result["interval"].as_str().unwrap().to_string(),
+                        "cron_expr": result["cron_expr"].as_str().unwrap().to_string(),
+                        "timezone": result["timezone"].as_str().unwrap().to_string(),
+                        "func_name": result["func_name"].as_str().unwrap().to_string(),
+                        "args": args_value,
+                        "timeout": result["timeout"].as_str().unwrap().to_string(),
+                        "queues": queues_value,
+                    }
+                );
+                http::fetch_show_ok(
+                    format!("{}{}/{}", &self.endpoint, "/scheduler/job", action),
+                    http::Options {
+                        method: Method::POST,
+                        body: body.to_string(),
+                        ..Default::default()
+                    },
+                )
+                .await;
+            }
+            Err(err) => {
+                println!("Error: {}", err);
+            }
+        }
+    }
+
     pub async fn start_or_stop(&self, action: &str) {
         http::fetch_show_ok(
             format!("{}{}/{}", &self.endpoint, "/scheduler", action),
@@ -699,6 +744,18 @@ mod tests {
             .create_async()
             .await;
         server
+            .mock("POST", "/scheduler/job/run")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
+            .mock("POST", "/scheduler/job/schedule")
+            .with_status(200)
+            .with_body(&empty_data)
+            .create_async()
+            .await;
+        server
             .mock("POST", "/scheduler/start")
             .with_status(200)
             .with_body(&empty_data)
@@ -852,6 +909,8 @@ mod tests {
         ags.delete_all_jobs(&mock).await;
         ags.pause_or_resume_job("pause", &mock).await;
         ags.pause_or_resume_job("resume", &mock).await;
+        ags.run_or_schedule_job("run", &mock).await;
+        ags.run_or_schedule_job("schedule", &mock).await;
         ags.start_or_stop("start").await;
         ags.start_or_stop("stop").await;
         ags.get_records(&mock).await;
