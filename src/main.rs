@@ -13,6 +13,9 @@ struct Args {
     /// AGScheduler HTTP endpoint
     #[arg(short, long, default_value = "http://127.0.0.1:36370")]
     endpoint: String,
+    /// SHA256 encrypted authorization password, e.g. here is admin: `echo -n admin | shasum -a 256` -> `8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918`
+    #[arg(short, long, default_value = "")]
+    password_sha2: String,
 }
 
 #[tokio::main]
@@ -24,6 +27,7 @@ async fn main() {
 
     let ags = AGScheduler {
         endpoint: args.endpoint,
+        password_sha2: args.password_sha2,
     };
 
     loop {

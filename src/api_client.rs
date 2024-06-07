@@ -9,13 +9,17 @@ use crate::{datetime, http};
 
 pub struct AGScheduler {
     pub endpoint: String,
+    pub password_sha2: String,
 }
 
 impl AGScheduler {
     pub async fn get_info(&self) {
         http::fetch_show_json(
             format!("{}{}", &self.endpoint, "/info"),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await;
     }
@@ -23,7 +27,10 @@ impl AGScheduler {
     pub async fn get_funcs(&self) {
         match http::fetch(
             format!("{}{}", &self.endpoint, "/funcs"),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -84,7 +91,10 @@ impl AGScheduler {
         let mut fn_selections: Vec<String> = vec![];
         match http::fetch(
             format!("{}{}", &self.endpoint, "/funcs"),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -129,6 +139,7 @@ impl AGScheduler {
             http::Options {
                 method,
                 body: body.to_string(),
+                password_sha2: String::from(&self.password_sha2),
                 ..Default::default()
             },
         )
@@ -162,7 +173,10 @@ impl AGScheduler {
         let mut data = HashMap::new();
         match http::fetch(
             format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -198,7 +212,10 @@ impl AGScheduler {
 
         http::fetch_show_json(
             format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await;
     }
@@ -206,7 +223,10 @@ impl AGScheduler {
     pub async fn get_all_jobs(&self) {
         match http::fetch(
             format!("{}{}", &self.endpoint, "/scheduler/jobs"),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -281,6 +301,7 @@ impl AGScheduler {
             format!("{}{}/{id}", &self.endpoint, "/scheduler/job"),
             http::Options {
                 method: Method::DELETE,
+                password_sha2: String::from(&self.password_sha2),
                 ..Default::default()
             },
         )
@@ -296,6 +317,7 @@ impl AGScheduler {
             format!("{}{}", &self.endpoint, "/scheduler/jobs"),
             http::Options {
                 method: Method::DELETE,
+                password_sha2: String::from(&self.password_sha2),
                 ..Default::default()
             },
         )
@@ -309,6 +331,7 @@ impl AGScheduler {
             format!("{}{}/{}/{}", &self.endpoint, "/scheduler/job", id, action),
             http::Options {
                 method: Method::POST,
+                password_sha2: String::from(&self.password_sha2),
                 ..Default::default()
             },
         )
@@ -320,7 +343,10 @@ impl AGScheduler {
 
         match http::fetch(
             format!("{}{}/{}", &self.endpoint, "/scheduler/job", id),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -349,6 +375,7 @@ impl AGScheduler {
                     http::Options {
                         method: Method::POST,
                         body: body.to_string(),
+                        password_sha2: String::from(&self.password_sha2),
                         ..Default::default()
                     },
                 )
@@ -365,6 +392,7 @@ impl AGScheduler {
             format!("{}{}/{}", &self.endpoint, "/scheduler", action),
             http::Options {
                 method: Method::POST,
+                password_sha2: String::from(&self.password_sha2),
                 ..Default::default()
             },
         )
@@ -383,7 +411,10 @@ impl AGScheduler {
         url_path = format!("{}?{}", url_path, query);
         match http::fetch(
             format!("{}{}", &self.endpoint, url_path),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -466,6 +497,7 @@ impl AGScheduler {
             format!("{}{}", &self.endpoint, url_path),
             http::Options {
                 method: Method::DELETE,
+                password_sha2: String::from(&self.password_sha2),
                 ..Default::default()
             },
         )
@@ -484,7 +516,10 @@ impl AGScheduler {
     pub async fn get_cluster_nodes(&self) {
         match http::fetch(
             format!("{}{}", &self.endpoint, "/cluster/nodes"),
-            http::Options::default(),
+            http::Options {
+                password_sha2: String::from(&self.password_sha2),
+                ..Default::default()
+            },
         )
         .await
         {
@@ -897,7 +932,10 @@ mod tests {
         mock.expect_select_func_name()
             .return_const("github.com/agscheduler/agscheduler/examples.PrintMsg");
 
-        let ags = AGScheduler { endpoint: url };
+        let ags = AGScheduler {
+            endpoint: url,
+            password_sha2: String::new(),
+        };
 
         ags.get_info().await;
         ags.get_funcs().await;

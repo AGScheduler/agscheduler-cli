@@ -10,6 +10,7 @@ pub struct Options {
     pub method: Method,
     pub body: String,
     pub timeout: Duration,
+    pub password_sha2: String,
 }
 
 impl Default for Options {
@@ -18,6 +19,7 @@ impl Default for Options {
             method: Method::GET,
             body: String::new(),
             timeout: Duration::from_secs(6),
+            password_sha2: String::new(),
         }
     }
 }
@@ -27,6 +29,7 @@ pub async fn fetch(url: String, options: Options) -> anyhow::Result<Value> {
 
     let response = client
         .request(options.method, url)
+        .header("Auth-Password-SHA2", options.password_sha2)
         .body(options.body)
         .timeout(options.timeout)
         .send()
