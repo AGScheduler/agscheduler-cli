@@ -25,6 +25,7 @@ Usage: agscheduler-cli [OPTIONS]
 
 Options:
   -e, --endpoint <ENDPOINT>  AGScheduler HTTP endpoint [default: http://127.0.0.1:36370]
+  -p, --password-sha2 <PASSWORD_SHA2>  SHA256 encrypted authorization password, e.g. here is admin: `echo -n admin | shasum -a 256` -> `8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918` [default: ]
   -h, --help                 Print help
   -V, --version              Print version
 
