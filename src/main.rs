@@ -1,9 +1,13 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use std::env;
+
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Select};
+use sha2::{Digest, Sha256};
 
 use agscheduler_cli::api_client::AGScheduler;
+use agscheduler_cli::http;
 use agscheduler_cli::interaction::Interaction;
 
 /// Command line interface for AGScheduler
@@ -13,9 +17,10 @@ struct Args {
     /// AGScheduler HTTP endpoint
     #[arg(short, long, default_value = "http://127.0.0.1:36370")]
     endpoint: String,
-    /// SHA256 encrypted authorization password, e.g. here is admin: `echo -n admin | shasum -a 256` -> `8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918`
-    #[arg(short, long, default_value = "")]
-    password_sha2: String,
+    /// AGScheduler password
+    /// You can also use the AGSCHEDULERCLI_AUTH environment variable to pass this password more safely
+    #[arg(short, long, default_value = "", verbatim_doc_comment)]
+    password: String,
 }
 
 #[tokio::main]
@@ -23,11 +28,21 @@ struct Args {
 async fn main() {
     let args = Args::parse();
 
+    let mut auth = env::var("AGSCHEDULERCLI_AUTH").unwrap_or("".to_string());
+    if !args.password.is_empty() {
+        auth = args.password;
+    }
+    if !auth.is_empty() {
+        unsafe {
+            let hash = Sha256::digest(auth);
+            http::PASSWORD_SHA2 = hex::encode(hash);
+        }
+    }
+
     println!("Connecting to `{}`...", args.endpoint);
 
     let ags = AGScheduler {
         endpoint: args.endpoint,
-        password_sha2: args.password_sha2,
     };
 
     loop {
