@@ -2,8 +2,10 @@
 
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Select};
+use sha2::{Digest, Sha256};
 
 use agscheduler_cli::api_client::AGScheduler;
+use agscheduler_cli::http;
 use agscheduler_cli::interaction::Interaction;
 
 /// Command line interface for AGScheduler
@@ -13,9 +15,9 @@ struct Args {
     /// AGScheduler HTTP endpoint
     #[arg(short, long, default_value = "http://127.0.0.1:36370")]
     endpoint: String,
-    /// SHA256 encrypted authorization password, e.g. here is admin: `echo -n admin | shasum -a 256` -> `8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918`
+    /// AGScheduler password
     #[arg(short, long, default_value = "")]
-    password_sha2: String,
+    password: String,
 }
 
 #[tokio::main]
@@ -23,11 +25,17 @@ struct Args {
 async fn main() {
     let args = Args::parse();
 
+    if !args.password.is_empty() {
+        unsafe {
+            let hash = Sha256::digest(args.password);
+            http::PASSWORD_SHA2 = hex::encode(hash);
+        }
+    }
+
     println!("Connecting to `{}`...", args.endpoint);
 
     let ags = AGScheduler {
         endpoint: args.endpoint,
-        password_sha2: args.password_sha2,
     };
 
     loop {

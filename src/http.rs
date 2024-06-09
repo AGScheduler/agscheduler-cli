@@ -6,11 +6,12 @@ use serde_json::Value;
 
 use crate::utils;
 
+pub static mut PASSWORD_SHA2: String = String::new();
+
 pub struct Options {
     pub method: Method,
     pub body: String,
     pub timeout: Duration,
-    pub password_sha2: String,
 }
 
 impl Default for Options {
@@ -19,7 +20,6 @@ impl Default for Options {
             method: Method::GET,
             body: String::new(),
             timeout: Duration::from_secs(6),
-            password_sha2: String::new(),
         }
     }
 }
@@ -27,9 +27,12 @@ impl Default for Options {
 pub async fn fetch(url: String, options: Options) -> anyhow::Result<Value> {
     let client = reqwest::Client::new();
 
+    let password_sha2;
+    unsafe { password_sha2 = PASSWORD_SHA2.as_str().to_string() }
+
     let response = client
         .request(options.method, url)
-        .header("Auth-Password-SHA2", options.password_sha2)
+        .header("Auth-Password-SHA2", password_sha2)
         .body(options.body)
         .timeout(options.timeout)
         .send()
