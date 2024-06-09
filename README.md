@@ -25,7 +25,8 @@ Usage: agscheduler-cli [OPTIONS]
 
 Options:
   -e, --endpoint <ENDPOINT>  AGScheduler HTTP endpoint [default: http://127.0.0.1:36370]
-  -p, --password <PASSWORD>  AGScheduler password [default: ]
+  -p, --password <PASSWORD>  AGScheduler password
+                             You can also use the AGSCHEDULERCLI_AUTH environment variable to pass this password more safely [default: ]
   -h, --help                 Print help
   -V, --version              Print version
 

@@ -1,5 +1,7 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use std::env;
+
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Select};
 use sha2::{Digest, Sha256};
@@ -16,7 +18,8 @@ struct Args {
     #[arg(short, long, default_value = "http://127.0.0.1:36370")]
     endpoint: String,
     /// AGScheduler password
-    #[arg(short, long, default_value = "")]
+    /// You can also use the AGSCHEDULERCLI_AUTH environment variable to pass this password more safely
+    #[arg(short, long, default_value = "", verbatim_doc_comment)]
     password: String,
 }
 
@@ -25,9 +28,13 @@ struct Args {
 async fn main() {
     let args = Args::parse();
 
+    let mut auth = env::var("AGSCHEDULERCLI_AUTH").unwrap_or("".to_string());
     if !args.password.is_empty() {
+        auth = args.password;
+    }
+    if !auth.is_empty() {
         unsafe {
-            let hash = Sha256::digest(args.password);
+            let hash = Sha256::digest(auth);
             http::PASSWORD_SHA2 = hex::encode(hash);
         }
     }
