@@ -481,6 +481,38 @@ impl AGScheduler {
         self._delete_records("", interaction).await;
     }
 
+    pub async fn get_queues(&self) {
+        match http::fetch(
+            format!("{}{}", &self.endpoint, "/broker/queues"),
+            http::Options::default(),
+        )
+        .await
+        {
+            Ok(result) => {
+                let mut table = Table::new();
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec!["Name", "Type", "Count", "Workers"]);
+
+                if let Value::Array(list) = result {
+                    for q in list {
+                        table.add_row(vec![
+                            q["name"].as_str().unwrap(),
+                            q["type"].as_str().unwrap(),
+                            &q["count"].to_string(),
+                            &q["workers"].to_string(),
+                        ]);
+                    }
+
+                    println!("{table}");
+                }
+            }
+            Err(err) => {
+                println!("Error: {}", err)
+            }
+        }
+    }
+
     pub async fn get_cluster_nodes(&self) {
         match http::fetch(
             format!("{}{}", &self.endpoint, "/cluster/nodes"),
@@ -853,6 +885,25 @@ mod tests {
             .create_async()
             .await;
         server
+            .mock("GET", "/broker/queues")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": [
+                        {
+                            "name": "default",
+                            "type": "Memory",
+                            "count": 1,
+                            "workers": 2,
+                        },
+                    ],
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
             .mock("GET", "/cluster/nodes")
             .with_status(200)
             .with_body(
@@ -917,6 +968,7 @@ mod tests {
         ags.get_all_records(&mock).await;
         ags.delete_records(&mock).await;
         ags.delete_all_records(&mock).await;
+        ags.get_queues().await;
         ags.get_cluster_nodes().await;
     }
 }
