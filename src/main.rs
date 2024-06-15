@@ -65,6 +65,7 @@ async fn main() {
             "Delete All Records",
             "Get Info",
             "Get Funcs",
+            "Get Queues",
             "Get Cluster Nodes",
         ];
 
@@ -97,7 +98,8 @@ async fn main() {
             15 => ags.delete_all_records(&interaction).await,
             16 => ags.get_info().await,
             17 => ags.get_funcs().await,
-            18 => ags.get_cluster_nodes().await,
+            18 => ags.get_queues().await,
+            19 => ags.get_cluster_nodes().await,
             _ => panic!("Error"),
         };
     }

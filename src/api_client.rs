@@ -12,44 +12,6 @@ pub struct AGScheduler {
 }
 
 impl AGScheduler {
-    pub async fn get_info(&self) {
-        http::fetch_show_json(
-            format!("{}{}", &self.endpoint, "/info"),
-            http::Options::default(),
-        )
-        .await;
-    }
-
-    pub async fn get_funcs(&self) {
-        match http::fetch(
-            format!("{}{}", &self.endpoint, "/funcs"),
-            http::Options::default(),
-        )
-        .await
-        {
-            Ok(result) => {
-                let mut table = Table::new();
-                table
-                    .set_content_arrangement(ContentArrangement::Dynamic)
-                    .set_header(vec!["name", "info"]);
-
-                if let Value::Array(list) = result {
-                    for f in list {
-                        table.add_row(vec![
-                            f["name"].as_str().unwrap(),
-                            f["info"].as_str().unwrap(),
-                        ]);
-                    }
-
-                    println!("{table}");
-                }
-            }
-            Err(err) => {
-                println!("Error: {}", err)
-            }
-        }
-    }
-
     async fn _edit_job(
         &self,
         data: HashMap<&str, String>,
@@ -225,6 +187,7 @@ impl AGScheduler {
                     ]);
 
                 if let Value::Array(list) = result {
+                    let total = list.len();
                     for j in list {
                         let _type = j["type"].as_str().unwrap();
                         let mut type_value = "";
@@ -262,6 +225,7 @@ impl AGScheduler {
                     }
 
                     println!("{table}");
+                    println!("Total {}", total);
                 }
             }
             Err(err) => {
@@ -481,6 +445,80 @@ impl AGScheduler {
         self._delete_records("", interaction).await;
     }
 
+    pub async fn get_info(&self) {
+        http::fetch_show_json(
+            format!("{}{}", &self.endpoint, "/info"),
+            http::Options::default(),
+        )
+        .await;
+    }
+
+    pub async fn get_funcs(&self) {
+        match http::fetch(
+            format!("{}{}", &self.endpoint, "/funcs"),
+            http::Options::default(),
+        )
+        .await
+        {
+            Ok(result) => {
+                let mut table = Table::new();
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec!["name", "info"]);
+
+                if let Value::Array(list) = result {
+                    let total = list.len();
+                    for f in list {
+                        table.add_row(vec![
+                            f["name"].as_str().unwrap(),
+                            f["info"].as_str().unwrap(),
+                        ]);
+                    }
+
+                    println!("{table}");
+                    println!("Total {}", total);
+                }
+            }
+            Err(err) => {
+                println!("Error: {}", err)
+            }
+        }
+    }
+
+    pub async fn get_queues(&self) {
+        match http::fetch(
+            format!("{}{}", &self.endpoint, "/broker/queues"),
+            http::Options::default(),
+        )
+        .await
+        {
+            Ok(result) => {
+                let mut table = Table::new();
+                table
+                    .set_content_arrangement(ContentArrangement::Dynamic)
+                    .set_header(vec!["Name", "Type", "Count", "Workers"]);
+
+                if let Value::Array(list) = result {
+                    let total = list.len();
+                    for q in list {
+                        table.add_row(vec![
+                            q["name"].as_str().unwrap(),
+                            q["type"].as_str().unwrap(),
+                            &q["count"].to_string(),
+                            &q["workers"].to_string(),
+                        ]);
+                    }
+
+                    println!("{table}");
+                    println!("Total {}", total);
+                }
+            }
+            Err(err) => {
+                println!("Error: {}", err)
+            }
+        }
+    }
+
     pub async fn get_cluster_nodes(&self) {
         match http::fetch(
             format!("{}{}", &self.endpoint, "/cluster/nodes"),
@@ -507,6 +545,7 @@ impl AGScheduler {
                     ]);
 
                 if let Value::Object(map) = result {
+                    let total = map.len();
                     for (_, n) in map.iter() {
                         let mut is_leader = false;
                         if n["endpoint"] == n["endpoint_main"] {
@@ -539,6 +578,7 @@ impl AGScheduler {
                     }
 
                     println!("{table}");
+                    println!("Total {}", total);
                 }
             }
             Err(err) => {
@@ -568,43 +608,9 @@ mod tests {
         let page_size = String::from("10");
 
         server
-            .mock("GET", "/info")
+            .mock("POST", "/scheduler/job")
             .with_status(200)
-            .with_body(
-                json!({
-                    "data": {
-                        "cluster_main_node": {
-                            "endpoint": "127.0.0.1:36380",
-                            "endpoint_grpc": "127.0.0.1:36360",
-                            "endpoint_http": "127.0.0.1:36370",
-                            "endpoint_main": "127.0.0.1:36380",
-                            "mode": ""
-                        },
-                        "is_cluster_mode": true,
-                        "is_running": false,
-                        "version": "0.6.1"
-                    },
-                    "error": ""
-                })
-                .to_string(),
-            )
-            .create_async()
-            .await;
-        server
-            .mock("GET", "/funcs")
-            .with_status(200)
-            .with_body(
-                json!({
-                    "data": [
-                        {
-                            "info": "",
-                            "name": "github.com/agscheduler/agscheduler/examples.PrintMsg"
-                        }
-                    ],
-                    "error": ""
-                })
-                .to_string(),
-            )
+            .with_body(&empty_data)
             .create_async()
             .await;
         server
@@ -705,12 +711,6 @@ mod tests {
                 })
                 .to_string(),
             )
-            .create_async()
-            .await;
-        server
-            .mock("POST", "/scheduler/job")
-            .with_status(200)
-            .with_body(&empty_data)
             .create_async()
             .await;
         server
@@ -853,6 +853,65 @@ mod tests {
             .create_async()
             .await;
         server
+            .mock("GET", "/info")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": {
+                        "cluster_main_node": {
+                            "endpoint": "127.0.0.1:36380",
+                            "endpoint_grpc": "127.0.0.1:36360",
+                            "endpoint_http": "127.0.0.1:36370",
+                            "endpoint_main": "127.0.0.1:36380",
+                            "mode": ""
+                        },
+                        "is_cluster_mode": true,
+                        "is_running": false,
+                        "version": "0.6.1"
+                    },
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("GET", "/funcs")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": [
+                        {
+                            "info": "",
+                            "name": "github.com/agscheduler/agscheduler/examples.PrintMsg"
+                        }
+                    ],
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
+            .mock("GET", "/broker/queues")
+            .with_status(200)
+            .with_body(
+                json!({
+                    "data": [
+                        {
+                            "name": "default",
+                            "type": "Memory",
+                            "count": 1,
+                            "workers": 2,
+                        },
+                    ],
+                    "error": ""
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+        server
             .mock("GET", "/cluster/nodes")
             .with_status(200)
             .with_body(
@@ -899,11 +958,9 @@ mod tests {
 
         let ags = AGScheduler { endpoint: url };
 
-        ags.get_info().await;
-        ags.get_funcs().await;
+        ags.add_job(&mock).await;
         ags.get_job(&mock).await;
         ags.get_all_jobs().await;
-        ags.add_job(&mock).await;
         ags.update_job(&mock).await;
         ags.delete_job(&mock).await;
         ags.delete_all_jobs(&mock).await;
@@ -917,6 +974,9 @@ mod tests {
         ags.get_all_records(&mock).await;
         ags.delete_records(&mock).await;
         ags.delete_all_records(&mock).await;
+        ags.get_info().await;
+        ags.get_funcs().await;
+        ags.get_queues().await;
         ags.get_cluster_nodes().await;
     }
 }
