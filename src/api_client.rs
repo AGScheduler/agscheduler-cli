@@ -187,6 +187,7 @@ impl AGScheduler {
                     ]);
 
                 if let Value::Array(list) = result {
+                    let total = list.len();
                     for j in list {
                         let _type = j["type"].as_str().unwrap();
                         let mut type_value = "";
@@ -224,6 +225,7 @@ impl AGScheduler {
                     }
 
                     println!("{table}");
+                    println!("Total {}", total);
                 }
             }
             Err(err) => {
@@ -465,6 +467,7 @@ impl AGScheduler {
                     .set_header(vec!["name", "info"]);
 
                 if let Value::Array(list) = result {
+                    let total = list.len();
                     for f in list {
                         table.add_row(vec![
                             f["name"].as_str().unwrap(),
@@ -473,6 +476,7 @@ impl AGScheduler {
                     }
 
                     println!("{table}");
+                    println!("Total {}", total);
                 }
             }
             Err(err) => {
@@ -495,6 +499,7 @@ impl AGScheduler {
                     .set_header(vec!["Name", "Type", "Count", "Workers"]);
 
                 if let Value::Array(list) = result {
+                    let total = list.len();
                     for q in list {
                         table.add_row(vec![
                             q["name"].as_str().unwrap(),
@@ -505,6 +510,7 @@ impl AGScheduler {
                     }
 
                     println!("{table}");
+                    println!("Total {}", total);
                 }
             }
             Err(err) => {
@@ -539,6 +545,7 @@ impl AGScheduler {
                     ]);
 
                 if let Value::Object(map) = result {
+                    let total = map.len();
                     for (_, n) in map.iter() {
                         let mut is_leader = false;
                         if n["endpoint"] == n["endpoint_main"] {
@@ -571,6 +578,7 @@ impl AGScheduler {
                     }
 
                     println!("{table}");
+                    println!("Total {}", total);
                 }
             }
             Err(err) => {
